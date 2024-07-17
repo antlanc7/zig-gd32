@@ -10,16 +10,16 @@ pub fn build(b: *std.Build) void {
 
     const elf = b.addExecutable(.{
         .name = "main",
-        .root_source_file = .{ .path = "src/startup.zig" },
-        .target = target,
+        .root_source_file = b.path("src/startup.zig"),
+        .target = b.resolveTargetQuery(target),
         .optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseSmall }),
     });
-    elf.setLinkerScript(.{ .path = "linker.ld" });
-    const install_elf_step = b.addInstallBinFile(elf.getOutputSource(), "main.elf");
+    elf.setLinkerScript(b.path("linker.ld"));
+    const install_elf_step = b.addInstallBinFile(elf.getEmittedBin(), "main.elf");
 
     // add a CLI option to enable asm output: -Dasm
     const asm_emit = b.option(bool, "asm", "enable asm output") orelse false;
-    const install_asm_step = b.addInstallFile(elf.getEmittedAsm(), "main.s");
+    const install_asm_step = b.addInstallBinFile(elf.getEmittedAsm(), "main.s");
     install_asm_step.step.dependOn(&install_elf_step.step);
 
     const bin_step = elf.addObjCopy(.{ .format = .bin });

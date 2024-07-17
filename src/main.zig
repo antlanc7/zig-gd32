@@ -13,13 +13,17 @@ fn uart_write(uart: *volatile gd32_types.UART3, bytes: []const u8) error{}!usize
     return bytes.len;
 }
 
-const uart7_writer = std.io.Writer(
+const UartWriter = std.io.GenericWriter(
     *volatile gd32_types.UART3,
     error{},
     uart_write,
-){
-    .context = gd32.UART7,
-};
+);
+
+fn uart_writer(uart: *volatile gd32_types.UART3) UartWriter {
+    return UartWriter{
+        .context = uart,
+    };
+}
 
 pub fn main() noreturn {
     systick.init(IRC_FREQ / 1000);
@@ -50,9 +54,11 @@ pub fn main() noreturn {
     // gpio b3 output (onboard led)
     gd32.GPIOC.CTL.modify(.{ .CTL4 = 1 });
     const delay_ms = 500;
+    const uart7 = uart_writer(gd32.UART7);
+
     while (true) {
         const curr_sec = systick.getTicks() / 1000;
-        uart7_writer.print("ciao da zig, {}\r\n", .{curr_sec}) catch unreachable;
+        uart7.print("ciao da zig, {}\r\n", .{curr_sec}) catch unreachable;
         gd32.GPIOC.BOP.modify(.{ .BOP4 = 1 }); // set gpio out value
         systick.delay(delay_ms);
         gd32.GPIOC.BC.modify(.{ .CR4 = 1 }); // set gpio out value
