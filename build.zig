@@ -1,18 +1,22 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) void {
-    const target = std.zig.CrossTarget{
+    const target = b.resolveTargetQuery(.{
         .cpu_arch = .thumb,
         .cpu_model = .{ .explicit = &std.Target.arm.cpu.cortex_m4 },
         .os_tag = .freestanding,
         .abi = .none,
-    };
+    });
+
+    const optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseSmall });
 
     const elf = b.addExecutable(.{
         .name = "main",
-        .root_source_file = b.path("src/startup.zig"),
-        .target = b.resolveTargetQuery(target),
-        .optimize = b.standardOptimizeOption(.{ .preferred_optimize_mode = .ReleaseSmall }),
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/startup.zig"),
+            .target = target,
+            .optimize = optimize,
+        }),
     });
     elf.setLinkerScript(b.path("linker.ld"));
     const install_elf_step = b.addInstallBinFile(elf.getEmittedBin(), "main.elf");
@@ -28,7 +32,7 @@ pub fn build(b: *std.Build) void {
     } else {
         bin_step.step.dependOn(&install_elf_step.step);
     }
-    const install_bin_step = b.addInstallBinFile(bin_step.getOutputSource(), "main.bin");
+    const install_bin_step = b.addInstallBinFile(bin_step.getOutput(), "main.bin");
     install_bin_step.step.dependOn(&bin_step.step);
     b.default_step.dependOn(&install_bin_step.step);
 

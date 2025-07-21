@@ -34,18 +34,20 @@ pub fn init(reload: u24) void {
 }
 
 var systick: u32 = 0;
-const systick_ptr: *volatile u32 = &systick;
 export fn sysTick_Handler() void {
-    systick_ptr.* +%= 1;
+    systick +%= 1;
 }
 
 pub fn delay(ms: u32) void {
-    const start = systick_ptr.*;
-    while (systick_ptr.* - start < ms) {
-        asm volatile ("");
-    }
+    awaitTicks(ms + systick);
 }
 
 pub fn getTicks() u32 {
-    return systick_ptr.*;
+    return systick;
+}
+
+pub fn awaitTicks(ms: u32) void {
+    while (systick < ms) {
+        asm volatile ("" ::: "memory");
+    }
 }

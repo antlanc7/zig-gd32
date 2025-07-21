@@ -1,10 +1,10 @@
 const main = @import("main.zig").main;
 
-extern const _data_loadaddr: u32;
-extern var _data: u32;
-extern const _edata: u32;
-extern var _bss: u32;
-extern const _ebss: u32;
+extern const _data_loadaddr: u8;
+extern var _data: u8;
+extern const _edata: u8;
+extern var _bss: u8;
+extern const _ebss: u8;
 
 export fn _start() noreturn {
     const data_size = @intFromPtr(&_edata) - @intFromPtr(&_data);
