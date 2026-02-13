@@ -1,4 +1,4 @@
-const gd32 = @import("lib/GD32F4xx.zig").devices.GD32F4xx.peripherals;
+const gd32 = @import("lib/GD32F4xx.zig").peripherals;
 
 const systick_t = packed struct {
     STK_CSR: packed struct(u32) {
